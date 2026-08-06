@@ -27,7 +27,8 @@ export default function ManageUsersPage() {
     queryFn: () => userManagementApi.getAllUsers(),
   });
 
-  const users = data?.data || [];
+  // Show ONLY regular customer users on this page
+  const users = (data?.data || []).filter((u) => u.role === 'USER');
 
   const changeStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: UserStatus }) =>
@@ -110,7 +111,6 @@ export default function ManageUsersPage() {
                         <option value="USER">USER</option>
                         <option value="STAFF">STAFF</option>
                         <option value="MANAGER">MANAGER</option>
-                        <option value="SYSTEM_OWNER">SYSTEM_OWNER</option>
                       </select>
                     ) : (
                       <Badge variant="primary">{u.role}</Badge>

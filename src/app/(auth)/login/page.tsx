@@ -30,8 +30,13 @@ export default function LoginPage() {
     try {
       const res = await authApi.login({ email, passwordHash: password });
       dispatch(setCredentials({ user: res.data.user, accessToken: res.data.accessToken }));
+      const userRole = res.data.user?.role;
       toast.success('Logged in successfully!');
-      router.push('/');
+      if (userRole === 'SYSTEM_OWNER' || userRole === 'MANAGER' || userRole === 'STAFF') {
+        router.push('/dashboard');
+      } else {
+        router.push('/');
+      }
     } catch (err: any) {
       toast.error(err.message || 'Login failed');
     } finally {

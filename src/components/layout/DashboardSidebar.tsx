@@ -56,15 +56,15 @@ export const DashboardSidebar: React.FC = () => {
       roles: ['SYSTEM_OWNER', 'MANAGER'],
     },
     {
-      label: 'Create Staff/Manager',
-      href: '/dashboard/staff',
+      label: 'Management',
+      href: '/dashboard/management',
       icon: UserPlus,
       roles: ['SYSTEM_OWNER', 'MANAGER'],
     },
   ];
 
   return (
-    <aside className="w-64 bg-slate-900 text-white min-h-screen p-4 flex flex-col justify-between shrink-0 border-r border-slate-800">
+    <aside className="w-64 bg-slate-900 text-white h-screen sticky top-0 p-4 flex flex-col justify-between shrink-0 border-r border-slate-800 overflow-y-auto">
       <div className="space-y-6">
         {/* Brand & Back to store */}
         <div className="space-y-3">
