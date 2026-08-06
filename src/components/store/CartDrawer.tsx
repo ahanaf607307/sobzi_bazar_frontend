@@ -29,18 +29,24 @@ export const CartDrawer: React.FC = () => {
 
   const cart = cartData?.data;
   const items = cart?.items || [];
+  const itemIdsStr = items.map((i) => i.id).join(',');
 
-  // Initialize and clean up selected item IDs
+  // Initialize and clean up selected item IDs safely without infinite re-renders
   useEffect(() => {
     if (items.length > 0) {
       setSelectedItemIds((prev) => {
-        const validPrev = prev.filter((id) => items.some((item) => item.id === id));
-        return validPrev.length > 0 ? validPrev : items.map((item) => item.id);
+        const currentIds = items.map((i) => i.id);
+        const validPrev = prev.filter((id) => currentIds.includes(id));
+        if (validPrev.length === 0) return currentIds;
+        if (validPrev.length === prev.length && validPrev.every((id, idx) => id === prev[idx])) {
+          return prev;
+        }
+        return validPrev;
       });
     } else {
-      setSelectedItemIds([]);
+      setSelectedItemIds((prev) => (prev.length === 0 ? prev : []));
     }
-  }, [items]);
+  }, [itemIdsStr]);
 
   // Calculate cart total count
   const totalCount = items.reduce((acc, item) => acc + item.quantity, 0);
