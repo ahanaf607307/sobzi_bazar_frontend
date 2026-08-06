@@ -26,6 +26,27 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
+/* Ensure all clickable interactive elements display pointer cursor */
+button,
+a,
+select,
+summary,
+label,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+select:disabled {
+  cursor: not-allowed;
+}
+
 /* Glassmorphism utilities */
 .glass-card {
   background: rgba(255, 255, 255, 0.85);
