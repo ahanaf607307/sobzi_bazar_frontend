@@ -3,7 +3,8 @@
 import React, { useState, use } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { productApi, getImageUrl } from '@/services/api';
+import { getImageUrl } from '@/services/api';
+import { productApi } from '@/services/productApi';
 import { cartApi } from '@/services/cartApi';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';

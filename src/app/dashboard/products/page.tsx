@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { productApi, getImageUrl } from '@/services/api';
+import { getImageUrl } from '@/services/api';
+import { productApi } from '@/services/productApi';
 import { Product } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
