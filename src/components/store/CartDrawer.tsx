@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
@@ -19,6 +19,8 @@ export const CartDrawer: React.FC = () => {
   const { isCartDrawerOpen } = useSelector((state: RootState) => state.cart);
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+
   const { data: cartData, isLoading } = useQuery({
     queryKey: ['cart'],
     queryFn: cartApi.getCart,
@@ -28,15 +30,46 @@ export const CartDrawer: React.FC = () => {
   const cart = cartData?.data;
   const items = cart?.items || [];
 
-  // Calculate cart total count & price
+  // Initialize and clean up selected item IDs
+  useEffect(() => {
+    if (items.length > 0) {
+      setSelectedItemIds((prev) => {
+        const validPrev = prev.filter((id) => items.some((item) => item.id === id));
+        return validPrev.length > 0 ? validPrev : items.map((item) => item.id);
+      });
+    } else {
+      setSelectedItemIds([]);
+    }
+  }, [items]);
+
+  // Calculate cart total count
   const totalCount = items.reduce((acc, item) => acc + item.quantity, 0);
-  const totalPrice = items.reduce((acc, item) => {
+
+  // Selected items calculation
+  const selectedItems = items.filter((item) => selectedItemIds.includes(item.id));
+  const selectedTotalPrice = selectedItems.reduce((acc, item) => {
     const price =
       item.product.discount > 0
         ? item.product.price * (1 - item.product.discount / 100)
         : item.product.price;
     return acc + price * item.quantity;
   }, 0);
+
+  const isAllSelected = items.length > 0 && selectedItemIds.length === items.length;
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedItemIds([]);
+    } else {
+      setSelectedItemIds(items.map((i) => i.id));
+    }
+  };
+
+  const toggleSelectItem = (id: string) => {
+    setSelectedItemIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
 
   useEffect(() => {
     dispatch(setCartCount(totalCount));
@@ -74,7 +107,7 @@ export const CartDrawer: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       <div
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity cursor-pointer"
         onClick={() => dispatch(toggleCartDrawer(false))}
       />
 
@@ -91,7 +124,7 @@ export const CartDrawer: React.FC = () => {
             </div>
             <button
               onClick={() => dispatch(toggleCartDrawer(false))}
-              className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition-colors"
+              className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -131,80 +164,115 @@ export const CartDrawer: React.FC = () => {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4 divide-y divide-slate-100">
-                {items.map((item) => {
-                  const unitPrice =
-                    item.product.discount > 0
-                      ? item.product.price * (1 - item.product.discount / 100)
-                      : item.product.price;
-                  const itemTotal = unitPrice * item.quantity;
+              <div>
+                {/* Select All Bar */}
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4 bg-slate-50 p-2.5 rounded-xl">
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                    />
+                    Select All ({selectedItemIds.length}/{items.length})
+                  </label>
+                  {selectedItemIds.length < items.length && (
+                    <span className="text-[11px] text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                      {selectedItemIds.length} item(s) selected
+                    </span>
+                  )}
+                </div>
 
-                  return (
-                    <div key={item.id} className="pt-4 first:pt-0 flex gap-4 items-center">
-                      <img
-                        src={
-                          item.product.images?.[0]
-                            ? getImageUrl(item.product.images[0])
-                            : '/placeholder-vegetable.jpg'
-                        }
-                        alt={item.product.name}
-                        className="w-16 h-16 object-cover rounded-xl border border-slate-100"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-slate-800 truncate">
-                          {item.product.name}
-                        </h4>
-                        <p className="text-xs text-slate-500 font-medium">
-                          ৳{unitPrice.toFixed(2)} / {item.product.unit || 'kg'}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <button
-                            disabled={item.quantity <= 1 || updateQuantityMutation.isPending}
-                            onClick={() =>
-                              updateQuantityMutation.mutate({
-                                itemId: item.id,
-                                quantity: item.quantity - 1,
-                              })
-                            }
-                            className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40"
-                          >
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="text-xs font-bold text-slate-800 w-5 text-center">
-                            {item.quantity}
+                {/* Items List */}
+                <div className="space-y-4 divide-y divide-slate-100">
+                  {items.map((item) => {
+                    const isSelected = selectedItemIds.includes(item.id);
+                    const unitPrice =
+                      item.product.discount > 0
+                        ? item.product.price * (1 - item.product.discount / 100)
+                        : item.product.price;
+                    const itemTotal = unitPrice * item.quantity;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={`pt-4 first:pt-0 flex gap-3 items-center p-2 rounded-xl transition-colors ${
+                          isSelected ? 'bg-emerald-50/40' : 'opacity-70 bg-slate-50/50'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelectItem(item.id)}
+                          className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer shrink-0"
+                        />
+
+                        <img
+                          src={
+                            item.product.images?.[0]
+                              ? getImageUrl(item.product.images[0])
+                              : '/placeholder-vegetable.jpg'
+                          }
+                          alt={item.product.name}
+                          className="w-14 h-14 object-cover rounded-xl border border-slate-100 shrink-0"
+                        />
+
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-bold text-slate-800 truncate">
+                            {item.product.name}
+                          </h4>
+                          <p className="text-xs text-slate-500 font-medium">
+                            ৳{unitPrice.toFixed(2)} / {item.product.unit || 'kg'}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <button
+                              disabled={item.quantity <= 1 || updateQuantityMutation.isPending}
+                              onClick={() =>
+                                updateQuantityMutation.mutate({
+                                  itemId: item.id,
+                                  quantity: item.quantity - 1,
+                                })
+                              }
+                              className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40 cursor-pointer"
+                            >
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="text-xs font-bold text-slate-800 w-5 text-center">
+                              {item.quantity}
+                            </span>
+                            <button
+                              disabled={
+                                item.quantity >= item.product.stock ||
+                                updateQuantityMutation.isPending
+                              }
+                              onClick={() =>
+                                updateQuantityMutation.mutate({
+                                  itemId: item.id,
+                                  quantity: item.quantity + 1,
+                                })
+                              }
+                              className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40 cursor-pointer"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <span className="text-sm font-black text-emerald-700 block">
+                            ৳{itemTotal.toFixed(2)}
                           </span>
                           <button
-                            disabled={
-                              item.quantity >= item.product.stock ||
-                              updateQuantityMutation.isPending
-                            }
-                            onClick={() =>
-                              updateQuantityMutation.mutate({
-                                itemId: item.id,
-                                quantity: item.quantity + 1,
-                              })
-                            }
-                            className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40"
+                            onClick={() => removeItemMutation.mutate(item.id)}
+                            className="text-xs text-rose-500 hover:text-rose-700 font-medium flex items-center gap-1 ml-auto mt-2 cursor-pointer"
                           >
-                            <Plus className="w-3 h-3" />
+                            <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
                       </div>
-
-                      <div className="text-right">
-                        <span className="text-sm font-black text-emerald-700 block">
-                          ৳{itemTotal.toFixed(2)}
-                        </span>
-                        <button
-                          onClick={() => removeItemMutation.mutate(item.id)}
-                          className="text-xs text-rose-500 hover:text-rose-700 font-medium flex items-center gap-1 ml-auto mt-2"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -214,16 +282,16 @@ export const CartDrawer: React.FC = () => {
             <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm text-slate-600">
-                  <span>Subtotal</span>
-                  <span className="font-semibold text-slate-800">৳{totalPrice.toFixed(2)}</span>
+                  <span>Selected Subtotal ({selectedItemIds.length} items)</span>
+                  <span className="font-semibold text-slate-800">৳{selectedTotalPrice.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-slate-600">
                   <span>Delivery Charge</span>
                   <span className="font-semibold text-emerald-600">Free / Standard</span>
                 </div>
                 <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-200">
-                  <span>Total Amount</span>
-                  <span className="text-emerald-700">৳{totalPrice.toFixed(2)}</span>
+                  <span>Total Payable</span>
+                  <span className="text-emerald-700">৳{selectedTotalPrice.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -238,12 +306,25 @@ export const CartDrawer: React.FC = () => {
                   Clear Cart
                 </Button>
                 <Link
-                  href="/checkout"
-                  onClick={() => dispatch(toggleCartDrawer(false))}
+                  href={`/checkout${selectedItemIds.length > 0 ? `?items=${selectedItemIds.join(',')}` : ''}`}
+                  onClick={(e) => {
+                    if (selectedItemIds.length === 0) {
+                      e.preventDefault();
+                      toast.error('Please select at least 1 item to checkout');
+                      return;
+                    }
+                    dispatch(toggleCartDrawer(false));
+                  }}
                   className="flex-1"
                 >
-                  <Button variant="primary" size="md" className="w-full" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                    Checkout Now
+                  <Button
+                    variant="primary"
+                    size="md"
+                    disabled={selectedItemIds.length === 0}
+                    className="w-full"
+                    rightIcon={<ArrowRight className="w-4 h-4" />}
+                  >
+                    Checkout ({selectedItemIds.length})
                   </Button>
                 </Link>
               </div>

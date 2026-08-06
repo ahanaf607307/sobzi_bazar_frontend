@@ -5,6 +5,7 @@ export interface CreateOrderPayload {
   shippingAddress: string;
   phone: string;
   paymentMethod?: PaymentMethod;
+  cartItemIds?: string[];
 }
 
 export const orderApi = {

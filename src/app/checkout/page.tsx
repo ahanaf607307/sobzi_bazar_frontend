@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cartApi } from '@/services/cartApi';
 import { orderApi } from '@/services/orderApi';
@@ -14,10 +14,16 @@ import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+
+  const selectedItemsParam = searchParams.get('items');
+  const selectedCartItemIds = selectedItemsParam
+    ? selectedItemsParam.split(',').filter(Boolean)
+    : [];
 
   const [shippingAddress, setShippingAddress] = useState('');
   const [phone, setPhone] = useState('');
@@ -30,7 +36,13 @@ export default function CheckoutPage() {
   });
 
   const cart = cartData?.data;
-  const items = cart?.items || [];
+  const allCartItems = cart?.items || [];
+
+  // Filter items based on selected cartItemIds if specified
+  const items =
+    selectedCartItemIds.length > 0
+      ? allCartItems.filter((ci) => selectedCartItemIds.includes(ci.id))
+      : allCartItems;
 
   const subtotal = items.reduce((acc, item) => {
     const price =
@@ -46,6 +58,7 @@ export default function CheckoutPage() {
         shippingAddress,
         phone,
         paymentMethod,
+        cartItemIds: selectedCartItemIds.length > 0 ? selectedCartItemIds : undefined,
       }),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
@@ -60,6 +73,10 @@ export default function CheckoutPage() {
     e.preventDefault();
     if (!shippingAddress.trim() || !phone.trim()) {
       toast.error('Shipping address and phone number are required');
+      return;
+    }
+    if (items.length === 0) {
+      toast.error('No items selected for checkout');
       return;
     }
     checkoutMutation.mutate();
@@ -83,8 +100,12 @@ export default function CheckoutPage() {
     return (
       <div className="max-w-md mx-auto px-4 py-20 text-center space-y-4">
         <ShoppingBag className="w-16 h-16 text-slate-300 mx-auto" />
-        <h2 className="text-2xl font-bold text-slate-800">Cart is Empty</h2>
-        <p className="text-sm text-slate-500">Add products to your basket before checking out.</p>
+        <h2 className="text-2xl font-bold text-slate-800">No Items Selected</h2>
+        <p className="text-sm text-slate-500">
+          {allCartItems.length > 0
+            ? 'Please select at least 1 item from your cart to checkout.'
+            : 'Add products to your basket before checking out.'}
+        </p>
         <Button variant="primary" onClick={() => router.push('/products')}>
           Browse Shop
         </Button>
@@ -94,11 +115,18 @@ export default function CheckoutPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      <div className="border-b border-slate-200 pb-6">
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Checkout Order</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Review your items and enter delivery information
-        </p>
+      <div className="border-b border-slate-200 pb-6 flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Checkout Order</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Review your selected items and enter delivery information
+          </p>
+        </div>
+        {selectedCartItemIds.length > 0 && selectedCartItemIds.length < allCartItems.length && (
+          <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1.5 rounded-full border border-emerald-200">
+            Checking out {selectedCartItemIds.length} of {allCartItems.length} items in cart
+          </span>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -162,7 +190,7 @@ export default function CheckoutPage() {
                   name="paymentMethod"
                   checked={paymentMethod === 'CASH_ON_DELIVERY'}
                   onChange={() => setPaymentMethod('CASH_ON_DELIVERY')}
-                  className="accent-emerald-600 w-4 h-4"
+                  className="accent-emerald-600 w-4 h-4 cursor-pointer"
                 />
                 <div>
                   <p className="text-sm font-bold">Cash On Delivery</p>
@@ -182,7 +210,7 @@ export default function CheckoutPage() {
                   name="paymentMethod"
                   checked={paymentMethod === 'ONLINE_PAYMENT'}
                   onChange={() => setPaymentMethod('ONLINE_PAYMENT')}
-                  className="accent-emerald-600 w-4 h-4"
+                  className="accent-emerald-600 w-4 h-4 cursor-pointer"
                 />
                 <div>
                   <p className="text-sm font-bold">Online Payment</p>
@@ -197,7 +225,7 @@ export default function CheckoutPage() {
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm space-y-6 sticky top-28">
             <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-4">
-              Order Summary ({items.length} items)
+              Order Summary ({items.length} item{items.length > 1 ? 's' : ''})
             </h3>
 
             <div className="space-y-3 max-h-60 overflow-y-auto divide-y divide-slate-100 pr-1">
@@ -251,5 +279,13 @@ export default function CheckoutPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<Spinner size="lg" className="py-20" />}>
+      <CheckoutPageContent />
+    </Suspense>
   );
 }
