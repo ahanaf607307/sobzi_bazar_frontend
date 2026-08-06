@@ -13,6 +13,7 @@ import {
   Users,
   UserPlus,
   ArrowLeft,
+  Leaf,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -63,16 +64,32 @@ export const DashboardSidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-64 bg-slate-900 text-white min-h-[calc(100vh-5rem)] p-4 flex flex-col justify-between shrink-0">
+    <aside className="w-64 bg-slate-900 text-white min-h-screen p-4 flex flex-col justify-between shrink-0 border-r border-slate-800">
       <div className="space-y-6">
-        {/* Back to store */}
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors p-2 rounded-xl bg-slate-800/60"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Store Front
-        </Link>
+        {/* Brand & Back to store */}
+        <div className="space-y-3">
+          <Link href="/dashboard" className="flex items-center gap-2.5 px-2 py-1">
+            <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-600/30">
+              <Leaf className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-lg font-black tracking-tight text-white">
+                Sobji<span className="text-emerald-400">Bazar</span>
+              </span>
+              <span className="block text-[9px] font-bold text-emerald-400 uppercase tracking-wider -mt-1">
+                Dashboard
+              </span>
+            </div>
+          </Link>
+
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-xs font-bold text-slate-300 hover:text-white transition-colors p-2 rounded-xl bg-slate-800/80 border border-slate-700/50"
+          >
+            <ArrowLeft className="w-4 h-4 text-emerald-400" />
+            Back to Store Front
+          </Link>
+        </div>
 
         {/* User Card */}
         <div className="p-3 rounded-2xl bg-slate-800 border border-slate-700/60">

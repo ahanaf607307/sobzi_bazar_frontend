@@ -35,6 +35,10 @@ export const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
+  if (pathname.startsWith('/dashboard')) {
+    return null;
+  }
+
   const isStaffOrAdmin =
     user?.role === 'SYSTEM_OWNER' ||
     user?.role === 'MANAGER' ||
@@ -119,25 +123,6 @@ export const Navbar: React.FC = () => {
             >
               Categories
             </Link>
-            {isAuthenticated && (
-              <Link
-                href="/orders"
-                className={`hover:text-emerald-600 transition-colors ${
-                  pathname.startsWith('/orders') ? 'text-emerald-600 font-bold' : ''
-                }`}
-              >
-                My Orders
-              </Link>
-            )}
-            {isStaffOrAdmin && (
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-1.5 bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl hover:bg-emerald-200 transition-colors text-xs font-bold"
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                Dashboard
-              </Link>
-            )}
           </nav>
 
           {/* Action Buttons */}
@@ -188,24 +173,13 @@ export const Navbar: React.FC = () => {
                     </Link>
 
                     <Link
-                      href="/orders"
+                      href={isStaffOrAdmin ? '/dashboard' : '/orders'}
                       onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors font-semibold"
                     >
-                      <ListOrdered className="w-4 h-4 text-slate-400" />
-                      My Orders
+                      <LayoutDashboard className="w-4 h-4 text-emerald-600" />
+                      Dashboard
                     </Link>
-
-                    {isStaffOrAdmin && (
-                      <Link
-                        href="/dashboard"
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-emerald-700 font-bold hover:bg-emerald-50 transition-colors"
-                      >
-                        <LayoutDashboard className="w-4 h-4 text-emerald-600" />
-                        Admin Dashboard
-                      </Link>
-                    )}
 
                     <div className="border-t border-slate-100 my-1" />
 
@@ -281,20 +255,11 @@ export const Navbar: React.FC = () => {
               </Link>
               {isAuthenticated && (
                 <Link
-                  href="/orders"
+                  href={isStaffOrAdmin ? '/dashboard' : '/orders'}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="py-2 px-3 rounded-lg hover:bg-slate-100"
+                  className="py-2 px-3 rounded-lg hover:bg-slate-100 font-semibold text-emerald-700"
                 >
-                  My Orders
-                </Link>
-              )}
-              {isStaffOrAdmin && (
-                <Link
-                  href="/dashboard"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="py-2 px-3 rounded-lg bg-emerald-100 text-emerald-800 font-bold"
-                >
-                  Admin Dashboard
+                  Dashboard
                 </Link>
               )}
             </div>

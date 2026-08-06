@@ -1,8 +1,16 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Leaf, Phone, Mail, MapPin, ShieldCheck, Truck, RefreshCw } from 'lucide-react';
 
 export const Footer: React.FC = () => {
+  const pathname = usePathname();
+
+  if (pathname.startsWith('/dashboard')) {
+    return null;
+  }
   return (
     <footer className="bg-slate-900 text-slate-300 mt-20 border-t border-slate-800">
       {/* Features Bar */}
