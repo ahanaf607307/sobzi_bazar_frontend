@@ -49,7 +49,7 @@ export const Footer: React.FC = () => {
       </div>
 
       {/* Main Footer Links */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="space-y-4">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="w-10 h-10 bg-emerald-600 rounded-2xl flex items-center justify-center text-white">
@@ -71,16 +71,6 @@ export const Footer: React.FC = () => {
             <li><Link href="/products" className="hover:text-emerald-400 transition-colors">All Fresh Products</Link></li>
             <li><Link href="/categories" className="hover:text-emerald-400 transition-colors">Product Categories</Link></li>
             <li><Link href="/orders" className="hover:text-emerald-400 transition-colors">Track Orders</Link></li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Categories</h4>
-          <ul className="space-y-2 text-xs font-medium">
-            <li><Link href="/products?searchTerm=Leafy" className="hover:text-emerald-400 transition-colors">Leafy Greens</Link></li>
-            <li><Link href="/products?searchTerm=Root" className="hover:text-emerald-400 transition-colors">Root Vegetables</Link></li>
-            <li><Link href="/products?searchTerm=Organic" className="hover:text-emerald-400 transition-colors">Organic Herbs</Link></li>
-            <li><Link href="/products?searchTerm=Fresh" className="hover:text-emerald-400 transition-colors">Seasonal Specials</Link></li>
           </ul>
         </div>
 
